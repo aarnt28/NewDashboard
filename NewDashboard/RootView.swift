@@ -12,7 +12,7 @@ struct RootView: View {
     var body: some View {
         TabView {
             OverviewView()
-                .tabItem { Label("Overview", systemImage: "rectangle.grid.2x2") }
+                .tabItem { Label("Overview", systemImage: "rectangle.grid.3x3") }
 
             ActiveView()
                 .tabItem { Label("Active", systemImage: "bolt.fill") }

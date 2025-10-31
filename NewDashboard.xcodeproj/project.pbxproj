@@ -10,9 +10,22 @@
 		261164822EB413D9005D31AE /* NewDashboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NewDashboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		260CF1F02EB46D4C00C73EE4 /* Exceptions for "NewDashboard" folder in "NewDashboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 261164812EB413D9005D31AE /* NewDashboard */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		261164842EB413D9005D31AE /* NewDashboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				260CF1F02EB46D4C00C73EE4 /* Exceptions for "NewDashboard" folder in "NewDashboard" target */,
+			);
 			path = NewDashboard;
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,9 @@
 				DEVELOPMENT_TEAM = 98WN6JLBV4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NewDashboard/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera to view and detect barcodes";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Capture audio with the video when necessary";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -288,6 +304,9 @@
 				DEVELOPMENT_TEAM = 98WN6JLBV4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NewDashboard/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera to view and detect barcodes";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Capture audio with the video when necessary";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -20,14 +20,15 @@ struct BarcodeScannerUIKit: UIViewControllerRepresentable {
     }
     func updateUIViewController(_ uiViewController: ScannerVC, context: Context) {}
     
+    @MainActor
     final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         var onFound: ((String) -> Void)?
         
         private let session = AVCaptureSession()
-        private let sessionQueue = DispatchQueue(label: "scanner.session.q")
         private var preview: AVCaptureVideoPreviewLayer!
         
         private let boxLayer = CAShapeLayer()
+        
         private let messageLabel: UILabel = {
             let l = UILabel()
             l.text = "Align the barcode in view"
@@ -71,7 +72,7 @@ struct BarcodeScannerUIKit: UIViewControllerRepresentable {
         
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            sessionQueue.async { [weak self] in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 if !self.session.isRunning { self.session.startRunning() }
             }
@@ -79,7 +80,7 @@ struct BarcodeScannerUIKit: UIViewControllerRepresentable {
         
         override func viewWillDisappear(_ animated: Bool) {
             super.viewWillDisappear(animated)
-            sessionQueue.async { [weak self] in
+            Task { @MainActor [weak self] in
                 guard let self else { return }
                 if self.session.isRunning { self.session.stopRunning() }
             }
@@ -102,26 +103,27 @@ struct BarcodeScannerUIKit: UIViewControllerRepresentable {
         }
         
         private func configureSession() {
-            sessionQueue.async {
+            Task { @MainActor [weak self] in
+                guard let self else { return }
                 self.session.beginConfiguration()
                 defer { self.session.commitConfiguration() }
                 self.session.sessionPreset = .high
-                
+
                 // Prefer back camera
                 let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
                 ?? AVCaptureDevice.default(for: .video)
-                
+
                 guard let device,
                       let input = try? AVCaptureDeviceInput(device: device),
                       self.session.canAddInput(input) else {
-                    DispatchQueue.main.async { self.showError("Camera unavailable on this device.") }
+                    self.showError("Camera unavailable on this device.")
                     return
                 }
                 self.session.addInput(input)
-                
+
                 let output = AVCaptureMetadataOutput()
                 guard self.session.canAddOutput(output) else {
-                    DispatchQueue.main.async { self.showError("Cannot add camera output.") }
+                    self.showError("Cannot add camera output.")
                     return
                 }
                 self.session.addOutput(output)
@@ -131,7 +133,7 @@ struct BarcodeScannerUIKit: UIViewControllerRepresentable {
                     .code128, .code39, .code93, .itf14,
                     .qr, .pdf417, .aztec, .dataMatrix
                 ]
-                
+
                 if !self.session.isRunning { self.session.startRunning() }
             }
         }
@@ -166,13 +168,13 @@ struct BarcodeScannerUIKit: UIViewControllerRepresentable {
             
             if let value = raw.stringValue {
                 // Stop once; tell SwiftUI host to dismiss
-                sessionQueue.async { [weak self] in
-                    self?.session.stopRunning()
-                    DispatchQueue.main.async { [weak self] in
-                        self?.onFound?(value)   // host will dismiss the sheet
-                    }
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+                    self.session.stopRunning()
+                    self.onFound?(value)   // host will dismiss the sheet
                 }
             }
         }
     }
 }
+

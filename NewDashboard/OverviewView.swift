@@ -40,23 +40,25 @@ struct OverviewView: View {
                     }
                     .buttonStyle(.borderedProminent)
 
-                    // Cards
-                    StatCard(
-                        title: "Tickets",
-                        bigNumberLeft: openTickets,
-                        bigNumberRight: totalTickets,
-                        subtitleLeft: "Open",
-                        subtitleRight: "Completion: \(completionPercent)%"
-                    )
-
-                    StatCard(
-                        title: "Hardware Inventory",
-                        bigNumberLeft: hardwareCount,
-                        bigNumberRight: nil,
-                        subtitleLeft: "Tracked assets",
-                        subtitleRight: nil
-                    )
-
+                    HStack{
+                        
+                        // Cards
+                        StatCard(
+                            title: "Tickets",
+                            bigNumberLeft: openTickets,
+                            bigNumberRight: totalTickets,
+                            subtitleLeft: "Open",
+                            subtitleRight: "Completion: \(completionPercent)%"
+                        )
+                        
+                        StatCard(
+                            title: "Hardware Inventory",
+                            bigNumberLeft: hardwareCount,
+                            bigNumberRight: nil,
+                            subtitleLeft: "Tracked assets",
+                            subtitleRight: nil
+                        )
+                    }
                     StatCard(
                         title: "Client Roster",
                         bigNumberLeft: clientCount,
