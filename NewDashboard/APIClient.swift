@@ -417,26 +417,81 @@ extension APIClient {
         let quantity: Int
         let acquisition_cost: String?
         let vendor: String?
+        let note: String?
+    }
+
+    struct InventoryReceiveResponse: Decodable {
+        struct TicketReference: Decodable {
+            let id: Int?
+
+            init(from decoder: Decoder) throws {
+                if let single = try? decoder.singleValueContainer() {
+                    if let intVal = try? single.decode(Int.self) {
+                        self.id = intVal
+                        return
+                    }
+                    if let stringVal = try? single.decode(String.self), let intVal = Int(stringVal) {
+                        self.id = intVal
+                        return
+                    }
+                }
+
+                if let container = try? decoder.container(keyedBy: CodingKeys.self) {
+                    self.id = try container.decodeIfPresent(Int.self, forKey: .id)
+                } else {
+                    self.id = nil
+                }
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case id
+            }
+        }
+
+        struct Adjustment: Decodable {
+            let id: Int?
+            let barcode: String?
+            let quantity: Int?
+            let quantityChange: Int?
+            let previousQuantity: Int?
+            let newQuantity: Int?
+            let note: String?
+            let description: String?
+            let message: String?
+        }
+
+        let ticket: TicketReference?
+        let ticketId: Int?
+        let adjustment: Adjustment?
+        let message: String?
     }
 
     /// POST /api/v1/inventory/receive
     /// Sends a receive adjustment for a hardware item by barcode.
     /// Adjust the path if your API uses a different route.
     @discardableResult
-    func receiveInventory(barcode: String, quantity: Int, acquisitionCost: String?, vendor: String?) async throws -> Bool {
+    func receiveInventory(
+        barcode: String,
+        quantity: Int,
+        acquisitionCost: String?,
+        vendor: String?,
+        note: String?
+    ) async throws -> InventoryReceiveResponse {
         let payload = InventoryReceiveRequest(
             barcode: barcode,
             quantity: quantity,
             acquisition_cost: (acquisitionCost?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false) ? acquisitionCost : nil,
-            vendor: (vendor?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false) ? vendor : nil
+            vendor: (vendor?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false) ? vendor : nil,
+            note: {
+                let trimmed = note?.trimmingCharacters(in: .whitespacesAndNewlines)
+                return (trimmed?.isEmpty == false) ? trimmed : nil
+            }()
         )
         let body = try JSONEncoder().encode(payload)
         let req = try makeRequest("/api/v1/inventory/receive", method: "POST", body: body)
-        let (_, resp) = try await urlSession.data(for: req)
-        guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-            throw URLError(.badServerResponse)
-        }
-        return true
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try await send(req, decoder: decoder)
     }
 }
 
