@@ -10,24 +10,30 @@ import SwiftUI
 
 struct RootView: View {
     var body: some View {
-        TabView {
-            OverviewView()
-                .tabItem { Label("Overview", systemImage: "rectangle.grid.3x3") }
+        ZStack {
+            VIPTheme.backgroundGradient
+                .ignoresSafeArea()
 
-            ActiveView()
-                .tabItem { Label("Active", systemImage: "bolt.fill") }
+            TabView {
+                OverviewView()
+                    .tabItem { Label("Overview", systemImage: "rectangle.grid.3x3") }
 
-            TicketsScreen()                // or TicketsView if you renamed it
-                .tabItem { Label("Tickets", systemImage: "doc.plaintext") }
+                ActiveView()
+                    .tabItem { Label("Active", systemImage: "bolt.fill") }
 
-            HardwareView()
-                .tabItem { Label("Hardware", systemImage: "shippingbox") }
+                TicketsScreen()                // or TicketsView if you renamed it
+                    .tabItem { Label("Tickets", systemImage: "doc.plaintext") }
 
-            ClientsView()
-                .tabItem { Label("Clients", systemImage: "person.3") }
+                HardwareView()
+                    .tabItem { Label("Hardware", systemImage: "shippingbox") }
 
-            SettingsView()
-                .tabItem { Label("Settings", systemImage: "gearshape") }
+                ClientsView()
+                    .tabItem { Label("Clients", systemImage: "person.3") }
+
+                SettingsView()
+                    .tabItem { Label("Settings", systemImage: "gearshape") }
+            }
+            .tint(.vipBlue)
         }
     }
 }
