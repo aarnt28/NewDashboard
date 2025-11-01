@@ -10,6 +10,7 @@ struct HardwareView: View {
     @State private var offset = 0
     @State private var isLoadingMore = false
     @State private var hasMore = true
+    @State private var loadMoreTask: Task<Void, Never>?
     @State private var showNewHardware = false
     @State private var showUseInventory = false
     @State private var showReceiveInventory = false
@@ -115,6 +116,8 @@ struct HardwareView: View {
     private func load(reset: Bool) async {
         if reset {
             if loading { return }
+            loadMoreTask?.cancel()
+            loadMoreTask = nil
             loading = true
             offset = 0
             hasMore = true
@@ -126,9 +129,21 @@ struct HardwareView: View {
 
         let currentOffset = reset ? 0 : offset
 
+        defer {
+            if reset {
+                loading = false
+            } else {
+                isLoadingMore = false
+            }
+        }
+
+        guard !Task.isCancelled else { return }
+
         do {
             let res = try await api.listHardware(limit: pageSize, offset: currentOffset)
             let fetched = res.items
+
+            guard !Task.isCancelled else { return }
 
             items.append(contentsOf: fetched)
             offset = currentOffset + fetched.count
@@ -142,17 +157,13 @@ struct HardwareView: View {
             }
 
             error = nil
+        } catch is CancellationError {
+            return
         } catch let err {
             if reset {
                 total = 0
             }
             error = err.localizedDescription
-        }
-
-        if reset {
-            loading = false
-        } else {
-            isLoadingMore = false
         }
     }
 
@@ -163,7 +174,11 @@ struct HardwareView: View {
               let last = items.last,
               last.id == currentItem.id else { return }
 
-        Task { await load(reset: false) }
+        loadMoreTask?.cancel()
+        loadMoreTask = Task {
+            await load(reset: false)
+            await MainActor.run { loadMoreTask = nil }
+        }
     }
 }
 
