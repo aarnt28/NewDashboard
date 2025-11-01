@@ -41,6 +41,7 @@ struct SettingsView: View {
         .onAppear {
             tmpURL = api.baseURL.absoluteString
             tmpKey = api.apiKey
+            info = nil
         }
     }
 
@@ -55,6 +56,6 @@ struct SettingsView: View {
         }
         api.baseURL = url
         api.apiKey = tmpKey
-        info = "Updated."
+        info = "Updated. Settings saved to this device."
     }
 }

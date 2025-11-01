@@ -13,8 +13,22 @@ import OSLog
 // MARK: - API Client
 
 final class APIClient: ObservableObject {
-    @Published var baseURL: URL
-    @Published var apiKey: String
+    private enum Defaults {
+        static let baseURL = "APIClient.baseURL"
+        static let apiKey = "APIClient.apiKey"
+    }
+
+    @Published var baseURL: URL {
+        didSet {
+            UserDefaults.standard.set(baseURL.absoluteString, forKey: Defaults.baseURL)
+        }
+    }
+
+    @Published var apiKey: String {
+        didSet {
+            UserDefaults.standard.set(apiKey, forKey: Defaults.apiKey)
+        }
+    }
     let urlSession: URLSession
 
     init(
@@ -22,8 +36,20 @@ final class APIClient: ObservableObject {
         apiKey: String = "CaRpoauTdDYdxQwWhWeXUQy",
         urlSession: URLSession = .shared
     ) {
-        self.baseURL = baseURL
-        self.apiKey = apiKey
+        let defaults = UserDefaults.standard
+        if let storedURL = defaults.string(forKey: Defaults.baseURL),
+           let url = URL(string: storedURL) {
+            self.baseURL = url
+        } else {
+            self.baseURL = baseURL
+        }
+
+        if let storedKey = defaults.string(forKey: Defaults.apiKey) {
+            self.apiKey = storedKey
+        } else {
+            self.apiKey = apiKey
+        }
+
         self.urlSession = urlSession
     }
 }
