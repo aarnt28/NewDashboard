@@ -6,6 +6,10 @@ struct HardwareView: View {
     @State private var total: Int = 0
     @State private var error: String?
     @State private var loading = false
+    @State private var pageSize = 50
+    @State private var offset = 0
+    @State private var isLoadingMore = false
+    @State private var hasMore = true
     @State private var showNewHardware = false
     @State private var showUseInventory = false
     @State private var showReceiveInventory = false
@@ -15,29 +19,43 @@ struct HardwareView: View {
             VStack(spacing: 20) {
                 SummaryCard(total: total)
 
-                List(items) { h in
-                    NavigationLink {
-                        HardwareDetailView(item: h) { updated in
-                            if let idx = items.firstIndex(where: { $0.id == updated.id }) {
-                                items[idx] = updated
+                List {
+                    ForEach(items) { h in
+                        NavigationLink {
+                            HardwareDetailView(item: h) { updated in
+                                if let idx = items.firstIndex(where: { $0.id == updated.id }) {
+                                    items[idx] = updated
+                                }
                             }
-                        }
-                    } label: {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(h.description)
-                                .font(.headline)
-                                .foregroundStyle(.primary)
-                                .lineLimit(2)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(h.description)
+                                    .font(.headline)
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(2)
 
-                            Text(h.barcode)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
+                                Text(h.barcode)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .onAppear { loadMoreIfNeeded(currentItem: h) }
+                    }
+
+                    if isLoadingMore {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
                         }
                         .padding(.vertical, 8)
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
@@ -73,8 +91,8 @@ struct HardwareView: View {
                 if loading && items.isEmpty { ProgressView() }
                 if let e = error { Text(e).foregroundStyle(.red).padding() }
             }
-            .task { await load() }
-            .refreshable { await load() }
+            .task { await load(reset: true) }
+            .refreshable { await load(reset: true) }
             .sheet(isPresented: $showUseInventory) {
                 UseInventoryView()
                     .environmentObject(api)
@@ -94,16 +112,58 @@ struct HardwareView: View {
     }
 
     @MainActor
-    private func load() async {
-        loading = true; defer { loading = false }
+    private func load(reset: Bool) async {
+        if reset {
+            if loading { return }
+            loading = true
+            offset = 0
+            hasMore = true
+            items.removeAll()
+        } else {
+            if isLoadingMore || loading || !hasMore { return }
+            isLoadingMore = true
+        }
+
+        let currentOffset = reset ? 0 : offset
+
         do {
-            let res = try await api.listHardware(limit: 200, offset: 0)
-            items = res.items
-            total = res.total ?? res.items.count
+            let res = try await api.listHardware(limit: pageSize, offset: currentOffset)
+            let fetched = res.items
+
+            items.append(contentsOf: fetched)
+            offset = currentOffset + fetched.count
+
+            if let totalValue = res.total {
+                total = totalValue
+                hasMore = offset < totalValue
+            } else {
+                total = max(total, offset)
+                hasMore = fetched.count == pageSize
+            }
+
             error = nil
         } catch let err {
+            if reset {
+                total = 0
+            }
             error = err.localizedDescription
         }
+
+        if reset {
+            loading = false
+        } else {
+            isLoadingMore = false
+        }
+    }
+
+    private func loadMoreIfNeeded(currentItem: Hardware) {
+        guard hasMore,
+              !loading,
+              !isLoadingMore,
+              let last = items.last,
+              last.id == currentItem.id else { return }
+
+        Task { await load(reset: false) }
     }
 }
 
