@@ -22,9 +22,10 @@ struct ReceiveInventoryView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var loading = false
     @State private var error: String?
-    @State private var successTicketID: Int?
     @State private var showScanner = false
     @State private var presentSuccess = false
+    @State private var successTitle: String = ""
+    @State private var successMessage: String = ""
     
     var body: some View {
         NavigationStack {
@@ -84,33 +85,87 @@ struct ReceiveInventoryView: View {
                     showScanner = false
                 }
             }
-            .alert("Ticket Created", isPresented: $presentSuccess) {
+            .alert(successTitle.isEmpty ? "Inventory Received" : successTitle, isPresented: $presentSuccess) {
                 Button("OK") { presentSuccess = false; dismiss() }
             } message: {
-                Text("Inventory received successfully.")
+                Text(successMessage.isEmpty ? "Inventory received successfully." : successMessage)
             }
         }
     }
-    
+
     @MainActor
     private func submit() async {
         error = nil
+        successTitle = ""
+        successMessage = ""
         guard !barcode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             error = "Please scan or enter a barcode."; return
         }
         loading = true; defer { loading = false }
         
         do {
-            _ = try await api.receiveInventory(
-                barcode: barcode.trimmingCharacters(in: .whitespacesAndNewlines),
+            let trimmedBarcode = barcode.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+            let response = try await api.receiveInventory(
+                barcode: trimmedBarcode,
                 quantity: quantity,
                 acquisitionCost: acquisitionCost,
-                vendor: vendor
+                vendor: vendor,
+                note: trimmedNotes.isEmpty ? nil : trimmedNotes
             )
-            self.successTicketID = nil
+            let content = successContent(from: response)
+            self.successTitle = content.title
+            self.successMessage = content.message
             self.presentSuccess = true
+            self.barcode = ""
+            self.quantity = 1
+            self.acquisitionCost = ""
+            self.vendor = ""
+            self.notes = ""
         } catch {
             self.error = error.localizedDescription
         }
+    }
+
+    private func successContent(from response: APIClient.InventoryReceiveResponse) -> (title: String, message: String) {
+        if let ticketID = response.ticket?.id ?? response.ticketId {
+            return ("Ticket Created", "Ticket #\(ticketID) created.")
+        }
+
+        if let adjustment = response.adjustment {
+            if let description = adjustment.description, !description.isEmpty {
+                return ("Inventory Adjusted", description)
+            }
+
+            if let message = adjustment.message, !message.isEmpty {
+                return ("Inventory Adjusted", message)
+            }
+
+            if let note = adjustment.note, !note.isEmpty {
+                return ("Inventory Adjusted", note)
+            }
+
+            if let change = adjustment.quantityChange, let newQuantity = adjustment.newQuantity {
+                return ("Inventory Adjusted", "Adjusted by \(change) to \(newQuantity).")
+            }
+
+            if let previous = adjustment.previousQuantity, let newQuantity = adjustment.newQuantity {
+                return ("Inventory Adjusted", "Quantity changed from \(previous) to \(newQuantity).")
+            }
+
+            if let quantity = adjustment.quantity {
+                let unit = quantity == 1 ? "item" : "items"
+                if let barcode = adjustment.barcode, !barcode.isEmpty {
+                    return ("Inventory Adjusted", "Received \(quantity) \(unit) for \(barcode).")
+                }
+                return ("Inventory Adjusted", "Received \(quantity) \(unit).")
+            }
+        }
+
+        if let message = response.message, !message.isEmpty {
+            return ("Inventory Received", message)
+        }
+
+        return ("Inventory Received", "Inventory received successfully.")
     }
 }
