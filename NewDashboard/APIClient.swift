@@ -16,6 +16,7 @@ import Security
 final class APIClient: ObservableObject {
     private enum Defaults {
         static let baseURL = "APIClient.baseURL"
+        static let apiKey = "APIClient.apiKey"
     }
 
     @Published var baseURL: URL {
@@ -51,6 +52,14 @@ final class APIClient: ObservableObject {
         do {
             if let storedKey = try APIClientKeychain.load() {
                 self.apiKey = storedKey
+            } else if let legacyKey = defaults.string(forKey: Defaults.apiKey), !legacyKey.isEmpty {
+                self.apiKey = legacyKey
+                do {
+                    try APIClientKeychain.store(apiKey: legacyKey)
+                    defaults.removeObject(forKey: Defaults.apiKey)
+                } catch {
+                    apiLog.error("Failed to migrate API key from defaults: \(String(describing: error), privacy: .public)")
+                }
             } else {
                 self.apiKey = apiKey
             }
