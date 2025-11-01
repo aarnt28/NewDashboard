@@ -9,13 +9,13 @@
 import Foundation
 import Combine
 import OSLog
+import Security
 
 // MARK: - API Client
 
 final class APIClient: ObservableObject {
     private enum Defaults {
         static let baseURL = "APIClient.baseURL"
-        static let apiKey = "APIClient.apiKey"
     }
 
     @Published var baseURL: URL {
@@ -26,7 +26,11 @@ final class APIClient: ObservableObject {
 
     @Published var apiKey: String {
         didSet {
-            UserDefaults.standard.set(apiKey, forKey: Defaults.apiKey)
+            do {
+                try APIClientKeychain.store(apiKey: apiKey)
+            } catch {
+                apiLog.error("Failed to persist API key: \(String(describing: error), privacy: .public)")
+            }
         }
     }
     let urlSession: URLSession
@@ -44,9 +48,14 @@ final class APIClient: ObservableObject {
             self.baseURL = baseURL
         }
 
-        if let storedKey = defaults.string(forKey: Defaults.apiKey) {
-            self.apiKey = storedKey
-        } else {
+        do {
+            if let storedKey = try APIClientKeychain.load() {
+                self.apiKey = storedKey
+            } else {
+                self.apiKey = apiKey
+            }
+        } catch {
+            apiLog.error("Failed to load API key: \(String(describing: error), privacy: .public)")
             self.apiKey = apiKey
         }
 
@@ -57,6 +66,96 @@ final class APIClient: ObservableObject {
 // MARK: - Logging
 
 private let apiLog = Logger(subsystem: "VIPDashboard", category: "API")
+
+private enum APIClientKeychain {
+    enum KeychainError: Error, CustomStringConvertible {
+        case unexpectedStatus(OSStatus)
+
+        var description: String {
+            switch self {
+            case .unexpectedStatus(let status):
+                if let message = SecCopyErrorMessageString(status, nil) as String? {
+                    return "Keychain error (status: \(status)) - \(message)"
+                }
+                return "Keychain error (status: \(status))"
+            }
+        }
+    }
+
+    private static let service = "VIPDashboard.APIClient"
+    private static let account = "apiKey"
+
+    static func store(apiKey: String) throws {
+        if apiKey.isEmpty {
+            try delete()
+            return
+        }
+
+        let data = Data(apiKey.utf8)
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+
+        let attributes: [String: Any] = [
+            kSecValueData as String: data
+        ]
+
+        var status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+
+        if status == errSecItemNotFound {
+            var addQuery = query
+            addQuery[kSecValueData as String] = data
+            status = SecItemAdd(addQuery as CFDictionary, nil)
+        }
+
+        guard status == errSecSuccess else {
+            throw KeychainError.unexpectedStatus(status)
+        }
+    }
+
+    static func load() throws -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+
+        var item: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &item)
+
+        if status == errSecItemNotFound {
+            return nil
+        }
+
+        guard status == errSecSuccess else {
+            throw KeychainError.unexpectedStatus(status)
+        }
+
+        guard let data = item as? Data else {
+            return nil
+        }
+
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func delete() throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+
+        let status = SecItemDelete(query as CFDictionary)
+
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw KeychainError.unexpectedStatus(status)
+        }
+    }
+}
 
 // MARK: - Core
 
