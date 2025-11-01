@@ -5,7 +5,6 @@
 //  Created by Aaron Turner on 10/30/25.
 //
 
-
 import SwiftUI
 
 struct TicketsScreen: View {
@@ -17,14 +16,27 @@ struct TicketsScreen: View {
 
     var body: some View {
         NavigationStack {
-            List(tickets) { t in
-                NavigationLink {
-                    TicketDetailView(ticket: t, onUpdate: replaceTicket, onDelete: { deleteTicket(t) })
-                } label: {
-                    TicketRow(ticket: t)
+            VStack(spacing: 20) {
+                List(tickets) { t in
+                    NavigationLink {
+                        TicketDetailView(ticket: t, onUpdate: replaceTicket, onDelete: { deleteTicket(t) })
+                    } label: {
+                        TicketRow(ticket: t)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(Color.white.opacity(0.8))
+                        .shadow(color: Color.vipBlue.opacity(0.1), radius: 18, x: 0, y: 12)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
-            .listStyle(.plain)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .navigationTitle("Recent Tickets")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -39,6 +51,7 @@ struct TicketsScreen: View {
             .task { await reload() }
             .refreshable { await reload() }
         }
+        .vipScreenBackground()
     }
 
     @MainActor

@@ -5,7 +5,6 @@
 //  Created by Aaron Turner on 10/30/25.
 //
 
-
 import SwiftUI
 
 struct OverviewView: View {
@@ -29,20 +28,17 @@ struct OverviewView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
-                    // Web app link
+                VStack(spacing: 20) {
                     Button {
                         openURL(api.baseURL)
                     } label: {
                         Label("Open Web App", systemImage: "safari")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
+                            .labelStyle(.titleAndIcon)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(VIPProminentButtonStyle())
+                    .padding(.top, 6)
 
-                    HStack{
-                        
-                        // Cards
+                    VStack(spacing: 18) {
                         StatCard(
                             title: "Tickets",
                             bigNumberLeft: openTickets,
@@ -50,7 +46,7 @@ struct OverviewView: View {
                             subtitleLeft: "Open",
                             subtitleRight: "Completion: \(completionPercent)%"
                         )
-                        
+
                         StatCard(
                             title: "Hardware Inventory",
                             bigNumberLeft: hardwareCount,
@@ -58,20 +54,25 @@ struct OverviewView: View {
                             subtitleLeft: "Tracked assets",
                             subtitleRight: nil
                         )
+
+                        StatCard(
+                            title: "Client Roster",
+                            bigNumberLeft: clientCount,
+                            bigNumberRight: nil,
+                            subtitleLeft: "Active relationships",
+                            subtitleRight: nil
+                        )
                     }
-                    StatCard(
-                        title: "Client Roster",
-                        bigNumberLeft: clientCount,
-                        bigNumberRight: nil,
-                        subtitleLeft: "Active relationships",
-                        subtitleRight: nil
-                    )
 
                     if let e = error {
-                        Text(e).foregroundStyle(.red).font(.footnote)
+                        Text(e)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
-                .padding()
+                .padding(.horizontal, 20)
+                .padding(.bottom, 32)
             }
             .navigationTitle("Overview")
             .toolbar {
@@ -86,6 +87,7 @@ struct OverviewView: View {
             .task { await load() }
             .refreshable { await load() }
         }
+        .vipScreenBackground()
     }
 
     @MainActor
@@ -123,34 +125,41 @@ private struct StatCard: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title.uppercased())
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .tracking(0.8)
+                .foregroundStyle(.white.opacity(0.75))
 
             HStack(alignment: .firstTextBaseline) {
                 Text("\(bigNumberLeft)")
                     .font(.system(size: 44, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
 
                 if let right = bigNumberRight {
                     Text("/\(right)")
                         .font(.title2.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white.opacity(0.8))
                 }
 
                 Spacer()
             }
 
             HStack {
-                Text(subtitleLeft).font(.caption).foregroundStyle(.secondary)
+                Text(subtitleLeft)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.9))
                 Spacer()
                 if let r = subtitleRight {
-                    Text(r).font(.caption).foregroundStyle(.secondary)
+                    Text(r)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.9))
                 }
             }
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(.thinMaterial)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(VIPTheme.cardGradient)
         )
+        .shadow(color: Color.vipBlue.opacity(0.18), radius: 18, x: 0, y: 14)
     }
 }

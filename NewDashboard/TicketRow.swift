@@ -41,11 +41,19 @@ struct TicketRow: View {
     }
 
     var body: some View {
-        if isCompactPhone {
-            compactBody
-        } else {
-            fullBody
+        Group {
+            if isCompactPhone {
+                compactBody
+            } else {
+                fullBody
+            }
         }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.85))
+                .shadow(color: Color.vipBlue.opacity(0.08), radius: 12, x: 0, y: 8)
+        )
     }
 
     // MARK: Compact layout (iPhone portrait) — only date + Done/Not Done
@@ -54,9 +62,10 @@ struct TicketRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(ticket.client ?? ticket.client_key)
                     .font(.headline)
+                    .foregroundStyle(Color.vipBlue)
                     .lineLimit(1)
                 Spacer()
-                Pill(text: ticket.entry_type.displayName.uppercased())
+                VIPGradientPill(text: ticket.entry_type.displayName.uppercased())
             }
 
             if let desc = ticket.note, !desc.isEmpty {
@@ -71,14 +80,15 @@ struct TicketRow: View {
                 Spacer()
                 if ticket.completed {
                     Label("Done", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(Color.vipGreen)
                 } else {
                     Label("Not Done", systemImage: "circle")
+                        .foregroundStyle(Color.vipBlue)
                 }
             }
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 8)
     }
 
     // MARK: Full layout (iPad / iPhone landscape) — richer quick stats
@@ -87,9 +97,10 @@ struct TicketRow: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(ticket.client ?? ticket.client_key)
                     .font(.headline)
+                    .foregroundStyle(Color.vipBlue)
                     .lineLimit(1)
                 Spacer()
-                Pill(text: ticket.entry_type.displayName.uppercased())
+                VIPGradientPill(text: ticket.entry_type.displayName.uppercased())
             }
 
             if let desc = ticket.note, !desc.isEmpty {
@@ -113,21 +124,5 @@ struct TicketRow: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 8)
-    }
-}
-
-// Small utility for the “TIME / HARDWARE / DEPLOYMENT” capsule
-private struct Pill: View {
-    let text: String
-    var body: some View {
-        Text(text)
-            .font(.caption2.weight(.semibold))
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(.ultraThinMaterial)
-            )
     }
 }
