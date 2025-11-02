@@ -49,24 +49,32 @@ final class APIClient: ObservableObject {
             self.baseURL = baseURL
         }
 
+        let resolvedAPIKey: String
+
         do {
             if let storedKey = try APIClientKeychain.load() {
-                self.apiKey = storedKey
-            } else if let legacyKey = defaults.string(forKey: Defaults.apiKey), !legacyKey.isEmpty {
-                self.apiKey = legacyKey
+                resolvedAPIKey = storedKey
+            } else if let legacyKey = defaults.string(forKey: Defaults.apiKey) {
+                resolvedAPIKey = legacyKey
                 do {
-                    try APIClientKeychain.store(apiKey: legacyKey)
+                    if legacyKey.isEmpty {
+                        try APIClientKeychain.delete()
+                    } else {
+                        try APIClientKeychain.store(apiKey: legacyKey)
+                    }
                     defaults.removeObject(forKey: Defaults.apiKey)
                 } catch {
                     apiLog.error("Failed to migrate API key from defaults: \(String(describing: error), privacy: .public)")
                 }
             } else {
-                self.apiKey = apiKey
+                resolvedAPIKey = apiKey
             }
         } catch {
             apiLog.error("Failed to load API key: \(String(describing: error), privacy: .public)")
-            self.apiKey = apiKey
+            resolvedAPIKey = apiKey
         }
+
+        self.apiKey = resolvedAPIKey
 
         self.urlSession = urlSession
     }
