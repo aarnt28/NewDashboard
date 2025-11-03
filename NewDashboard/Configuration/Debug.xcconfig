@@ -1,0 +1,2 @@
+API_BASE_URL = https://staging.api.example.com
+APP_BUILD_CHANNEL = DEBUG
