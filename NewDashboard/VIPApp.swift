@@ -15,14 +15,26 @@ struct VIPApp: App {
 
     init() {
         let tabAppearance = UITabBarAppearance()
-        tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = UIColor(Color.white.opacity(0.92))
-        tabAppearance.shadowImage = UIImage()
-        tabAppearance.shadowColor = .clear
+        tabAppearance.configureWithDefaultBackground()
+        // Use a system material for adaptive light/dark appearance
+        tabAppearance.backgroundEffect = UIBlurEffect(style: .systemChromeMaterial)
+        tabAppearance.backgroundColor = nil
+        tabAppearance.shadowColor = nil
 
         UITabBar.appearance().standardAppearance = tabAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
-        UITabBar.appearance().unselectedItemTintColor = UIColor(Color.vipBlue.opacity(0.6))
+        // Use dynamic color for unselected items so it adapts in dark mode
+        UITabBar.appearance().unselectedItemTintColor = UIColor.secondaryLabel
+
+        // Navigation bar: adaptive material background for light/dark
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithDefaultBackground()
+        navAppearance.backgroundEffect = UIBlurEffect(style: .systemChromeMaterial)
+        navAppearance.backgroundColor = nil
+        navAppearance.shadowColor = nil
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
     }
 
     var body: some Scene {
@@ -32,4 +44,3 @@ struct VIPApp: App {
         }
     }
 }
-

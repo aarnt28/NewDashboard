@@ -171,6 +171,11 @@ struct Hardware: Codable, Identifiable, Hashable {
     let created_at: String?
     let common_vendors: [String]?
     let average_unit_cost: Double?
+    // Optional inventory status fields; server may or may not provide these
+    let quantity_on_hand: Int?
+    let quantity_available: Int?
+    let quantity_reserved: Int?
+    let quantity_committed: Int?
 }
 
 /// A forgiving /hardware wrapper that accepts:
@@ -224,4 +229,5 @@ enum ISO8601DateTransformer {
 //
 //  Created by Aaron Turner on 10/30/25.
 //
+
 

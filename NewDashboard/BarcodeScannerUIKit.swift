@@ -2,55 +2,41 @@
 //  BarcodeScannerUIKit.swift
 //  NewDashboard
 //
-//  Regenerated with safer lifecycle + permissions + simulator gating.
-//  Drop this in place of your existing file.
+//  Hardened for SwiftUI .sheet, Simulator/Catalyst gating,
+//  safer metadata type assignment, and extra diagnostics.
 //
 
 import SwiftUI
 import AVFoundation
 import UIKit
 
-// MARK: - SwiftUI wrapper
-
 struct BarcodeScannerUIKit: UIViewControllerRepresentable {
     typealias UIViewControllerType = ScannerVC
-
-    /// Called on the main thread with the scanned string value.
     var onCode: (String) -> Void
 
     func makeUIViewController(context: Context) -> ScannerVC {
         let vc = ScannerVC()
         vc.onFound = { value in
-            // Ensure UI updates happen on main
-            DispatchQueue.main.async {
-                onCode(value)
-            }
+            DispatchQueue.main.async { onCode(value) }
         }
         return vc
     }
 
-    func updateUIViewController(_ uiViewController: ScannerVC, context: Context) {
-        // no-op
-    }
+    func updateUIViewController(_ uiViewController: ScannerVC, context: Context) {}
 
     static func dismantleUIViewController(_ uiViewController: ScannerVC, coordinator: ()) {
         uiViewController.cleanShutdown()
     }
 }
 
-// MARK: - UIKit scanner
-
 final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
 
-    // Public callback
     var onFound: ((String) -> Void)?
 
-    // Capture pipeline
     private let session = AVCaptureSession()
     private let output = AVCaptureMetadataOutput()
     private var preview: AVCaptureVideoPreviewLayer?
 
-    // Internal
     private let callbackQueue = DispatchQueue(label: "scanner.metadata.queue")
     private var isConfigured = false
     private var didReportFatal = false
@@ -68,12 +54,10 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // Stop cleanly when sheet dismisses or view hierarchy changes
         if session.isRunning { session.stopRunning() }
         preview?.session = nil
     }
 
-    /// Explicit shutdown for Representable dismantle
     func cleanShutdown() {
         if session.isRunning { session.stopRunning() }
         preview?.session = nil
@@ -83,13 +67,17 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
 
     private func requestAndConfigure() {
         #if targetEnvironment(simulator)
-        showError("""
-        Camera not available in Simulator.
-        Run on a physical device to scan barcodes.
-        """)
+        showError("Camera not available in Simulator.")
         return
-        #endif
-
+        #elseif targetEnvironment(macCatalyst)
+        showError("Camera scanning isn’t supported under Mac Catalyst in this build.")
+        return
+        #else
+        // Ensure Info.plist has the camera usage description; missing key will crash in production/TestFlight
+        if Bundle.main.object(forInfoDictionaryKey: "NSCameraUsageDescription") == nil {
+            showError("This build is missing the required NSCameraUsageDescription in Info.plist.")
+            return
+        }
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
             showError("No camera available on this device.")
             return
@@ -100,62 +88,66 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
             Task { @MainActor in configureSessionIfNeeded() }
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                guard let self else { return }
                 DispatchQueue.main.async {
-                    if granted {
-                        self.configureSessionIfNeeded()
-                    } else {
-                        self.showError("Camera access denied.\nEnable in Settings > Privacy > Camera.")
-                    }
+                    guard let self else { return }
+                    granted ? self.configureSessionIfNeeded()
+                            : self.showError("Camera access denied. Enable it in Settings.")
                 }
             }
         case .denied, .restricted:
-            showError("Camera access denied.\nEnable in Settings > Privacy > Camera.")
+            showError("Camera access denied. Enable it in Settings.")
         @unknown default:
-            showError("Camera permission status unknown.")
+            showError("Unknown camera permission state.")
         }
+        #endif
     }
 
     @MainActor
     private func configureSessionIfNeeded() {
         guard !isConfigured else {
-            // If already configured (e.g., returning to view), just start
             if !session.isRunning { session.startRunning() }
             return
         }
 
-        session.beginConfiguration()
-        defer { session.commitConfiguration() }
-
-        // Input
-        guard
-            let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-            let input = try? AVCaptureDeviceInput(device: device),
-            session.canAddInput(input)
-        else {
-            showError("Unable to open the back camera.")
+        // Pick a real back camera via discovery session for reliability
+        let discovery = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInWideAngleCamera, .builtInDualWideCamera, .builtInTripleCamera],
+            mediaType: .video,
+            position: .back
+        )
+        guard let device = discovery.devices.first ?? AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            showError("No usable back camera found.")
             return
         }
-        session.addInput(input)
 
-        // Output
+        session.beginConfiguration()
+
+        // Inputs
+        do {
+            let input = try AVCaptureDeviceInput(device: device)
+            guard session.canAddInput(input) else {
+                showError("Unable to add camera input.")
+                session.commitConfiguration()
+                return
+            }
+            session.addInput(input)
+        } catch {
+            showError("Failed to open camera input: \(error.localizedDescription)")
+            session.commitConfiguration()
+            return
+        }
+
+        // Outputs
         guard session.canAddOutput(output) else {
             showError("Scanner output not available.")
+            session.commitConfiguration()
             return
         }
         session.addOutput(output)
         output.setMetadataObjectsDelegate(self, queue: callbackQueue)
 
-        // Restrict to supported types only
-        let requested: [AVMetadataObject.ObjectType] = [.qr, .ean8, .ean13, .code128]
-        let supported = Set(output.availableMetadataObjectTypes)
-        let filtered = requested.filter { supported.contains($0) }
-
-        if filtered.isEmpty {
-            showError("No supported barcode types on this device.")
-            return
-        }
-        output.metadataObjectTypes = filtered
+        // Finish configuring the session before starting it
+        session.commitConfiguration()
 
         // Preview
         let layer = AVCaptureVideoPreviewLayer(session: session)
@@ -165,6 +157,23 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
 
         isConfigured = true
         session.startRunning()
+
+        // Assign metadata types AFTER session starts to avoid device races.
+        // Tiny async hop gives the output a beat to populate supported types on some iPads.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            guard let self else { return }
+            let requested: [AVMetadataObject.ObjectType] = [.qr, .ean8, .ean13, .code128, .pdf417]
+            let supported = Set(self.output.availableMetadataObjectTypes)
+            let filtered = requested.filter { supported.contains($0) }
+
+            if filtered.isEmpty {
+                self.showError("No supported barcode types on this device.")
+                return
+            }
+            self.output.metadataObjectTypes = filtered
+            // Quick diagnostic print for your console
+            print("Scanner active. Supported types:", supported)
+        }
     }
 
     // MARK: - Delegate
@@ -175,9 +184,8 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
         guard let first = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
               let value = first.stringValue else { return }
 
-        // Stop once we have a value and report back on main
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             if self.session.isRunning { self.session.stopRunning() }
             self.onFound?(value)
         }
@@ -186,7 +194,6 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
     // MARK: - UI Errors
 
     private func showError(_ message: String) {
-        // Avoid layering multiple labels if called more than once
         if didReportFatal { return }
         didReportFatal = true
 
@@ -198,7 +205,6 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
         label.translatesAutoresizingMaskIntoConstraints = false
         label.font = UIFont.preferredFont(forTextStyle: .body)
 
-        // Dimmed background to make text readable
         let plate = UIView()
         plate.translatesAutoresizingMaskIntoConstraints = false
         plate.backgroundColor = UIColor.black.withAlphaComponent(0.6)
@@ -218,5 +224,9 @@ final class ScannerVC: UIViewController, AVCaptureMetadataOutputObjectsDelegate 
             label.topAnchor.constraint(equalTo: plate.topAnchor, constant: 16),
             label.bottomAnchor.constraint(equalTo: plate.bottomAnchor, constant: -16),
         ])
+
+        // Also log to the console for fast triage
+        print("Scanner fatal:", message)
     }
 }
+

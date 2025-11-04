@@ -51,8 +51,8 @@ struct TicketRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.85))
-                .shadow(color: Color.vipBlue.opacity(0.08), radius: 12, x: 0, y: 8)
+                .fill(.regularMaterial)
+                .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 6)
         )
     }
 
@@ -126,3 +126,4 @@ struct TicketRow: View {
         }
     }
 }
+

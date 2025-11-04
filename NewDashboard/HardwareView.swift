@@ -34,10 +34,37 @@ struct HardwareView: View {
                                     .foregroundStyle(.primary)
                                     .lineLimit(2)
 
-                                Text(h.barcode)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
+                                HStack(spacing: 8) {
+                                    if let qoh = h.quantity_on_hand {
+                                        let available = h.quantity_available ?? qoh - (h.quantity_committed ?? 0)
+                                        let statusText: String = available > 0 ? "In stock" : (qoh > 0 ? "Allocated" : "Out of stock")
+                                        let statusColor: Color = available > 0 ? .green : (qoh > 0 ? .orange : .red)
+                                        Text(statusText)
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(statusColor)
+                                        Text("QOH: \(qoh)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        if let reserved = h.quantity_reserved, reserved > 0 {
+                                            Text("Reserved: \(reserved)")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        if let committed = h.quantity_committed, committed > 0 {
+                                            Text("Committed: \(committed)")
+                                                .font(.caption)
+                                                .foregroundStyle(.secondary)
+                                        }
+                                        Text("Avail: \(max(0, available))")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    } else {
+                                        Text(h.barcode)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                            .lineLimit(1)
+                                    }
+                                }
                             }
                             .padding(.vertical, 8)
                         }
