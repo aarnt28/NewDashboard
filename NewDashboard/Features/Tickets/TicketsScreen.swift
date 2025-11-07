@@ -13,18 +13,33 @@ struct TicketsScreen: View {
     @State private var tickets: [Ticket] = []
     @State private var error: String?
     @State private var loading = false
+    
+    @AppStorage("TicketsScreen.showCompleted") private var
+        showCompleted: Bool = true
+    
+    private var filteredTickets: [Ticket] {
+        tickets.filter { showCompleted || !$0.completed }
+    }
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                List(tickets) { t in
+                List(filteredTickets, id: \.id) { t in
                     NavigationLink {
-                        TicketDetailView(ticket: t, onUpdate: replaceTicket, onDelete: { deleteTicket(t) })
+                        TicketDetailView(
+                            ticket: t,
+                            onUpdate: { (updated: Ticket) in
+                                replaceTicket(updated)
+                            },
+                            onDelete: {
+                                deleteTicket(t)
+                            }
+                        )
                     } label: {
                         TicketRow(ticket: t)
                     }
                     .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
+                    //.listRowBackground(.adaptiveRow)
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
@@ -39,9 +54,14 @@ struct TicketsScreen: View {
             .padding(.vertical, 12)
             .navigationTitle("Recent Tickets")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }
-                        .disabled(loading)
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        Toggle(isOn: $showCompleted) {
+                            Label("Show Done", systemImage: showCompleted ? "checkmark.circle.fill" : "circle")
+                        }
+                    } label: {
+                        Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    }
                 }
             }
             .overlay {
@@ -82,3 +102,4 @@ struct TicketsScreen: View {
         }
     }
 }
+

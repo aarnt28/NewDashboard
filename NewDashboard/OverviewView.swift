@@ -80,7 +80,11 @@ struct OverviewView: View {
                     Button { Task { await load() } } label: { Image(systemName: "arrow.clockwise") }
                         .disabled(loading)
                 }
+                
             }
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(VIPTheme.backgroundGradient, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
             .overlay {
                 if loading { ProgressView() }
             }
