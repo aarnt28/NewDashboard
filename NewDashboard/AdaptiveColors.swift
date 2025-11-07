@@ -3,12 +3,12 @@ import SwiftUI
 extension Color {
     /// Card/section surface
     static let adaptiveCard = Color(UIColor { traits in
-        traits.userInterfaceStyle == .dark ? .secondarySystemBackground : .white
+        traits.userInterfaceStyle == .dark ? .secondarySystemBackground : .systemBackground
     })
 
     /// List row background
     static let adaptiveRow = Color(UIColor { traits in
-        traits.userInterfaceStyle == .dark ? .tertiarySystemBackground : .white
+        traits.userInterfaceStyle == .dark ? .tertiarySystemBackground : .systemBackground
     })
 
     /// Screen background when you want a plain fill
