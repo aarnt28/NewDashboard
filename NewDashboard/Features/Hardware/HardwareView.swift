@@ -67,8 +67,9 @@ struct HardwareView: View {
                     HardwareRow(h: h)
                 }
                 .listRowSeparator(.hidden)
-                .listRowBackground(Color.adaptiveRow)
+                .listRowBackground(Color.clear)
                 .onAppear { loadMoreIfNeeded(currentItem: h) }
+                .foregroundStyle(.white)
             }
 
             if isLoadingMore {
@@ -86,7 +87,7 @@ struct HardwareView: View {
         .scrollContentBackground(.hidden)
         .background(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(Color.white.opacity(0.82))
+                .fill(VIPTheme.cardGradient)
                 .shadow(color: Color.vipBlue.opacity(0.1), radius: 18, x: 0, y: 12)
         )
         .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))

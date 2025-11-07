@@ -11,10 +11,10 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		260CF1F02EB46D4C00C73EE4 /* Exceptions for "NewDashboard" folder in "NewDashboard" target */ = {
+		262B5A4D2EBEAA52005CBD9A /* Exceptions for "NewDashboard" folder in "NewDashboard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Supporting/Info.plist,
 			);
 			target = 261164812EB413D9005D31AE /* NewDashboard */;
 		};
@@ -24,7 +24,7 @@
 		261164842EB413D9005D31AE /* NewDashboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				260CF1F02EB46D4C00C73EE4 /* Exceptions for "NewDashboard" folder in "NewDashboard" target */,
+				262B5A4D2EBEAA52005CBD9A /* Exceptions for "NewDashboard" folder in "NewDashboard" target */,
 			);
 			path = NewDashboard;
 			sourceTree = "<group>";
@@ -259,7 +259,7 @@
 				DEVELOPMENT_TEAM = 98WN6JLBV4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NewDashboard/Info.plist;
+				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_CFBundleDisplayName = "VIP Clouds Billing";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera to detect and view barcode";
@@ -281,7 +281,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -296,7 +296,7 @@
 				DEVELOPMENT_TEAM = 98WN6JLBV4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = NewDashboard/Info.plist;
+				INFOPLIST_FILE = "";
 				INFOPLIST_KEY_CFBundleDisplayName = "VIP Clouds Billing";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Use camera to detect and view barcode";
@@ -318,7 +318,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

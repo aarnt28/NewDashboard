@@ -8,7 +8,7 @@ extension Color {
 
     /// List row background
     static let adaptiveRow = Color(UIColor { traits in
-        traits.userInterfaceStyle == .dark ? .tertiarySystemBackground : .tertiarySystemBackground
+        traits.userInterfaceStyle == .dark ? .systemGray5 : .systemGray5
     })
 
     /// Screen background when you want a plain fill
