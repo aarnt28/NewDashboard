@@ -17,6 +17,7 @@ struct TicketDetailView: View {
     @State private var note: String = ""
     @State private var invoiceNumber: String = ""
     @State private var invoicedTotal: String = ""
+    @State private var calculated_total: String = ""
     @State private var hardwareBarcode: String = ""
     @State private var hardwareQuantity: String = ""
     @State private var flatRateAmount: String = ""
@@ -59,6 +60,10 @@ struct TicketDetailView: View {
                         if let mins = ticket.minutes, ticket.elapsed_minutes == nil && ticket.rounded_minutes == nil {
                             infoRow("Minutes", "\(mins)")
                         }
+                        if let calculated_total = ticket.calculated_value  {
+                            infoRow("Calculated Billable", "\(calculated_total)")
+                            
+                        }
                         if let start = ISO8601DateTransformer.parse(ticket.start_iso) {
                             infoRow("Start", start.formatted(date: .numeric, time: .shortened))
                         }
@@ -83,6 +88,9 @@ struct TicketDetailView: View {
                     TextField("Invoiced Total", text: $invoicedTotal)
                         .textInputAutocapitalization(.never)
                         .textFieldStyle(.roundedBorder)
+                    //TextField("Calculated Total", text: $calculated_total)
+                        //textInputAutocapitalization(.never)
+                        //.textFieldStyle(.roundedBorder)
                 }
                 
                 // MARK: HARDWARE
@@ -210,6 +218,7 @@ struct TicketDetailView: View {
         endDate = ticket.endDate
         completed = ticket.completed
         sent = ticket.sent
+        calculated_total = ticket.calculated_value ?? ""
     }
     
     // MARK: - Save Patch

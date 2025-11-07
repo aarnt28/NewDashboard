@@ -69,7 +69,7 @@ struct HardwareView: View {
                             .padding(.vertical, 8)
                         }
                         .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
+                        .listRowBackground(Color.brown)
                         .onAppear { loadMoreIfNeeded(currentItem: h) }
                     }
 
