@@ -25,7 +25,10 @@ struct RootView: View {
                     .tabItem { Label("Tickets", systemImage: "doc.plaintext") }
 
                 HardwareView()
-                    .tabItem { Label("Hardware", systemImage: "shippingbox") }
+                    .tabItem { Label("Hardware", systemImage: "shippingbox")
+                    
+                InventoryView()
+                    .tabItem { Label("Inventory", systemImage: "list.bullet.clipboard.fill") 
 
                 ClientsView()
                     .tabItem { Label("Clients", systemImage: "person.3") }
