@@ -22,6 +22,8 @@ struct ClientsDetailView: View {
     
     @State private var saving = false
     @State private var error: String?
+    @State private var baselineName: String = ""
+    @State private var baselineAttributes: [String: String] = [:]
     
     struct AttrRow: Identifiable, Hashable {
         var id = UUID()
@@ -100,9 +102,12 @@ struct ClientsDetailView: View {
     }
     
     private func loadFields() {
+        error = nil
         name = record.name
-        // Build editable rows from attributes map; hide "name" if it leaked in
+        baselineName = record.name
         let attrs = record.attributes ?? [:]
+        baselineAttributes = attrs
+        // Build editable rows from attributes map; hide "name" if it leaked in
         rows = attrs
             .filter { $0.key != "name" }
             .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
@@ -125,12 +130,12 @@ struct ClientsDetailView: View {
     private func buildPatch() -> [String: Any] {
         var patch: [String: Any] = [:]
         
-        if name != record.name {
+        if name != baselineName {
             patch["name"] = name
         }
         
         // Only send changed attributes; empty value => clear (NSNull)
-        let original = record.attributes ?? [:]
+        let original = baselineAttributes
         for row in rows {
             let newVal = row.value.trimmingCharacters(in: .whitespacesAndNewlines)
             let oldVal = original[row.key]
@@ -145,8 +150,11 @@ struct ClientsDetailView: View {
     }
     
     private func save() async {
-        await MainActor.run { error = nil }
-        saving = true; defer { saving = false }
+        await MainActor.run {
+            error = nil
+            saving = true
+        }
+        defer { Task { await MainActor.run { saving = false } } }
         
         let patch = buildPatch()
         if patch.isEmpty { return } // nothing to change
@@ -154,14 +162,23 @@ struct ClientsDetailView: View {
         do {
             let updated = try await api.updateClient(clientKey: record.client_key, patch: patch)
             
-            // Convert server blob back into our flat UI model
             let updatedAttrs = updated.attributes ?? [:]
             let flat = ClientRecord(
                 client_key: updated.client_key,
                 name: updated.name,
                 attributes: updatedAttrs.isEmpty ? nil : updatedAttrs
             )
+            
             await MainActor.run {
+                // Update baselines and UI state already set above to ensure consistency
+                baselineName = updated.name
+                baselineAttributes = updated.attributes ?? [:]
+                name = updated.name
+                let attrs = baselineAttributes
+                rows = attrs
+                    .filter { $0.key != "name" }
+                    .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+                    .map { AttrRow(key: $0.key, value: $0.value, originalValue: $0.value) }
                 onUpdate(flat)
             }
         } catch {
@@ -169,3 +186,4 @@ struct ClientsDetailView: View {
         }
     }
 }
+
