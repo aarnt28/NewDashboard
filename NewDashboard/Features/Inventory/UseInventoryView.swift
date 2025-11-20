@@ -155,6 +155,7 @@ struct UseInventoryView: View {
         
         do {
             let ticket = try await api.createTicket(new)
+            WidgetReloader.reloadOpenTickets()
             self.successTicketID = ticket.id
             self.presentSuccess = true
         } catch {

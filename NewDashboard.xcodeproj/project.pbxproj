@@ -6,8 +6,44 @@
 	objectVersion = 90;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		26E3F1FD2ECE8FC90027E538 /* SharedAppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E3F1FC2ECE8FC90027E538 /* SharedAppConstants.swift */; };
+		26E3F2012ECE90030027E538 /* WidgetReloading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E3F2002ECE90030027E538 /* WidgetReloading.swift */; };
+		26E3F20B2ECE90E10027E538 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26E3F20A2ECE90E10027E538 /* WidgetKit.framework */; };
+		26E3F20D2ECE90E10027E538 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 26E3F20C2ECE90E10027E538 /* SwiftUI.framework */; };
+		26E3F21E2ECE90E10027E538 /* OpenTicketsWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 26E3F2082ECE90E10027E538 /* OpenTicketsWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		26E3F2282ECE9C0C0027E538 /* SharedAppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E3F1FC2ECE8FC90027E538 /* SharedAppConstants.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		26E3F21C2ECE90E10027E538 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 2611647A2EB413D9005D31AE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 26E3F2072ECE90E10027E538;
+			remoteInfo = OpenTicketsWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		26E3F2232ECE90E10027E538 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				26E3F21E2ECE90E10027E538 /* OpenTicketsWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		261164822EB413D9005D31AE /* NewDashboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NewDashboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		26E3F1FC2ECE8FC90027E538 /* SharedAppConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedAppConstants.swift; sourceTree = "<group>"; };
+		26E3F2002ECE90030027E538 /* WidgetReloading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetReloading.swift; sourceTree = "<group>"; };
+		26E3F2082ECE90E10027E538 /* OpenTicketsWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OpenTicketsWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		26E3F20A2ECE90E10027E538 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		26E3F20C2ECE90E10027E538 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -17,6 +53,13 @@
 				Supporting/Info.plist,
 			);
 			target = 261164812EB413D9005D31AE /* NewDashboard */;
+		};
+		26E3F2222ECE90E10027E538 /* Exceptions for "OpenTicketsWidget" folder in "OpenTicketsWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 26E3F2072ECE90E10027E538 /* OpenTicketsWidgetExtension */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -29,12 +72,27 @@
 			path = NewDashboard;
 			sourceTree = "<group>";
 		};
+		26E3F20E2ECE90E10027E538 /* OpenTicketsWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				26E3F2222ECE90E10027E538 /* Exceptions for "OpenTicketsWidget" folder in "OpenTicketsWidgetExtension" target */,
+			);
+			path = OpenTicketsWidget;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2611647F2EB413D9005D31AE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+			);
+		};
+		26E3F2052ECE90E10027E538 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+				26E3F20D2ECE90E10027E538 /* SwiftUI.framework in Frameworks */,
+				26E3F20B2ECE90E10027E538 /* WidgetKit.framework in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -44,7 +102,11 @@
 			isa = PBXGroup;
 			children = (
 				261164842EB413D9005D31AE /* NewDashboard */,
+				26E3F20E2ECE90E10027E538 /* OpenTicketsWidget */,
+				26E3F2092ECE90E10027E538 /* Frameworks */,
 				261164832EB413D9005D31AE /* Products */,
+				26E3F1FC2ECE8FC90027E538 /* SharedAppConstants.swift */,
+				26E3F2002ECE90030027E538 /* WidgetReloading.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -52,8 +114,18 @@
 			isa = PBXGroup;
 			children = (
 				261164822EB413D9005D31AE /* NewDashboard.app */,
+				26E3F2082ECE90E10027E538 /* OpenTicketsWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		26E3F2092ECE90E10027E538 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				26E3F20A2ECE90E10027E538 /* WidgetKit.framework */,
+				26E3F20C2ECE90E10027E538 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -66,8 +138,12 @@
 				2611647E2EB413D9005D31AE /* Sources */,
 				2611647F2EB413D9005D31AE /* Frameworks */,
 				261164802EB413D9005D31AE /* Resources */,
+				26E3F2232ECE90E10027E538 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
+			);
+			dependencies = (
+				26E3F21D2ECE90E10027E538 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				261164842EB413D9005D31AE /* NewDashboard */,
@@ -77,6 +153,24 @@
 			productReference = 261164822EB413D9005D31AE /* NewDashboard.app */;
 			productType = "com.apple.product-type.application";
 		};
+		26E3F2072ECE90E10027E538 /* OpenTicketsWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 26E3F21F2ECE90E10027E538 /* Build configuration list for PBXNativeTarget "OpenTicketsWidgetExtension" */;
+			buildPhases = (
+				26E3F2042ECE90E10027E538 /* Sources */,
+				26E3F2052ECE90E10027E538 /* Frameworks */,
+				26E3F2062ECE90E10027E538 /* Resources */,
+			);
+			buildRules = (
+			);
+			fileSystemSynchronizedGroups = (
+				26E3F20E2ECE90E10027E538 /* OpenTicketsWidget */,
+			);
+			name = OpenTicketsWidgetExtension;
+			productName = OpenTicketsWidgetExtension;
+			productReference = 26E3F2082ECE90E10027E538 /* OpenTicketsWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -84,11 +178,14 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastSwiftUpdateCheck = 2610;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					261164812EB413D9005D31AE = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					26E3F2072ECE90E10027E538 = {
+						CreatedOnToolsVersion = 26.1.1;
 					};
 				};
 			};
@@ -107,6 +204,7 @@
 			projectRoot = "";
 			targets = (
 				261164812EB413D9005D31AE /* NewDashboard */,
+				26E3F2072ECE90E10027E538 /* OpenTicketsWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -117,15 +215,36 @@
 			files = (
 			);
 		};
+		26E3F2062ECE90E10027E538 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		2611647E2EB413D9005D31AE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
+				26E3F1FD2ECE8FC90027E538 /* SharedAppConstants.swift in Sources */,
+				26E3F2012ECE90030027E538 /* WidgetReloading.swift in Sources */,
+			);
+		};
+		26E3F2042ECE90E10027E538 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				26E3F2282ECE9C0C0027E538 /* SharedAppConstants.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		26E3F21D2ECE90E10027E538 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 26E3F2072ECE90E10027E538 /* OpenTicketsWidgetExtension */;
+			targetProxy = 26E3F21C2ECE90E10027E538 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		2611648B2EB413DA005D31AE /* Debug configuration for PBXProject "NewDashboard" */ = {
@@ -187,6 +306,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -244,6 +364,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -273,7 +394,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.3;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = co.turnernet.NewDashboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -310,7 +431,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.3;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = co.turnernet.NewDashboard;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -319,6 +440,68 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		26E3F2202ECE90E10027E538 /* Debug configuration for PBXNativeTarget "OpenTicketsWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 98WN6JLBV4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenTicketsWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenTicketsWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.turnernet.NewDashboard.OpenTicketsWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		26E3F2212ECE90E10027E538 /* Release configuration for PBXNativeTarget "OpenTicketsWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 98WN6JLBV4;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = OpenTicketsWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = OpenTicketsWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = co.turnernet.NewDashboard.OpenTicketsWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -339,6 +522,14 @@
 			buildConfigurations = (
 				2611648E2EB413DA005D31AE /* Debug configuration for PBXNativeTarget "NewDashboard" */,
 				2611648F2EB413DA005D31AE /* Release configuration for PBXNativeTarget "NewDashboard" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		26E3F21F2ECE90E10027E538 /* Build configuration list for PBXNativeTarget "OpenTicketsWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				26E3F2202ECE90E10027E538 /* Debug configuration for PBXNativeTarget "OpenTicketsWidgetExtension" */,
+				26E3F2212ECE90E10027E538 /* Release configuration for PBXNativeTarget "OpenTicketsWidgetExtension" */,
 			);
 			defaultConfigurationName = Release;
 		};

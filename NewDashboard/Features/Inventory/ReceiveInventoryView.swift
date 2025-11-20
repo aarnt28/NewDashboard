@@ -117,6 +117,7 @@ struct ReceiveInventoryView: View {
             self.successTitle = content.title
             self.successMessage = content.message
             self.presentSuccess = true
+            WidgetReloader.reloadOpenTickets()
             self.barcode = ""
             self.quantity = 1
             self.acquisitionCost = ""
@@ -169,3 +170,4 @@ struct ReceiveInventoryView: View {
         return ("Inventory Received", "Inventory received successfully.")
     }
 }
+

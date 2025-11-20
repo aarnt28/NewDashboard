@@ -9,10 +9,21 @@
 import Foundation
 import Combine
 import OSLog
+import WidgetKit
 
 // MARK: - API Client
 
 final class APIClient: ObservableObject {
+    private static var sharedSuite: UserDefaults {
+        UserDefaults(suiteName: SharedAppConstants.appGroupSuite) ?? .standard
+    }
+
+    private func setShared(_ value: Any?, forKey key: String) {
+        let suite = APIClient.sharedSuite
+        suite.set(value, forKey: key)
+        UserDefaults.standard.set(value, forKey: key)
+    }
+
     private enum Defaults {
         static let baseURL = "APIClient.baseURL"
         static let apiKey = "APIClient.apiKey"
@@ -20,13 +31,15 @@ final class APIClient: ObservableObject {
 
     @Published var baseURL: URL {
         didSet {
-            UserDefaults.standard.set(baseURL.absoluteString, forKey: Defaults.baseURL)
+            setShared(baseURL.absoluteString, forKey: Defaults.baseURL)
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 
     @Published var apiKey: String {
         didSet {
-            UserDefaults.standard.set(apiKey, forKey: Defaults.apiKey)
+            setShared(apiKey, forKey: Defaults.apiKey)
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
     let urlSession: URLSession
@@ -36,7 +49,7 @@ final class APIClient: ObservableObject {
         apiKey: String = "CaRpoauTdDYdxQwWhWeXUQy",
         urlSession: URLSession = .shared
     ) {
-        let defaults = UserDefaults.standard
+        let defaults = APIClient.sharedSuite
         if let storedURL = defaults.string(forKey: Defaults.baseURL),
            let url = URL(string: storedURL) {
             self.baseURL = url
@@ -51,6 +64,10 @@ final class APIClient: ObservableObject {
         }
 
         self.urlSession = urlSession
+
+        // Persist into App Group so the widget can read settings
+        setShared(self.baseURL.absoluteString, forKey: Defaults.baseURL)
+        setShared(self.apiKey, forKey: Defaults.apiKey)
     }
 }
 
@@ -130,13 +147,17 @@ extension APIClient {
     func createTicket(_ new: NewTicket) async throws -> Ticket {
         let body = try JSONEncoder().encode(new)
         let req = try makeRequest("/api/v1/tickets", method: "POST", body: body)
-        return try await send(req)
+        let ticket: Ticket = try await send(req)
+        WidgetCenter.shared.reloadTimelines(ofKind: SharedAppConstants.openTicketsWidgetKind)
+        return ticket
     }
 
     func updateTicket(id: Int, patch: [String: Any]) async throws -> Ticket {
         let body = try JSONSerialization.data(withJSONObject: patch, options: [])
         let req = try makeRequest("/api/v1/tickets/\(id)", method: "PATCH", body: body)
-        return try await send(req)
+        let ticket: Ticket = try await send(req)
+        WidgetCenter.shared.reloadTimelines(ofKind: SharedAppConstants.openTicketsWidgetKind)
+        return ticket
     }
 
     func deleteTicket(id: Int) async throws {
@@ -145,6 +166,7 @@ extension APIClient {
         guard let http = resp as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
             throw URLError(.badServerResponse)
         }
+        WidgetCenter.shared.reloadTimelines(ofKind: SharedAppConstants.openTicketsWidgetKind)
     }
 }
 
