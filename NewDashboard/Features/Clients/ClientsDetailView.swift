@@ -7,6 +7,9 @@
 
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ClientsDetailView: View {
     @EnvironmentObject var api: APIClient
@@ -19,7 +22,7 @@ struct ClientsDetailView: View {
     @State private var rows: [AttrRow] = []     // editable k/v pairs
     @State private var newKey: String = ""
     @State private var newValue: String = ""
-    
+
     @State private var saving = false
     @State private var error: String?
     @State private var baselineName: String = ""
@@ -29,6 +32,7 @@ struct ClientsDetailView: View {
         var id = UUID()
         var key: String
         var value: String
+        var keyboard: ClientAttributeKeyboard
         var originalValue: String?
     }
     
@@ -54,7 +58,9 @@ struct ClientsDetailView: View {
                                 .font(.callout)
                             Spacer()
                             TextField("value", text: $row.value)
-                                .textInputAutocapitalization(.never)
+                                .textInputAutocapitalization(row.keyboard.autocapitalization)
+                                .keyboardType(row.keyboard.keyboardType)
+                                .applyTextContentType(row.keyboard.textContentType)
                                 .multilineTextAlignment(.trailing)
                                 .foregroundStyle(.primary)
                         }
@@ -70,7 +76,9 @@ struct ClientsDetailView: View {
                         TextField("new key", text: $newKey)
                             .textInputAutocapitalization(.never)
                         TextField("new value", text: $newValue)
-                            .textInputAutocapitalization(.never)
+                            .textInputAutocapitalization(newAttributeKeyboard.autocapitalization)
+                            .keyboardType(newAttributeKeyboard.keyboardType)
+                            .applyTextContentType(newAttributeKeyboard.textContentType)
                             .multilineTextAlignment(.trailing)
                     }
                     Button {
@@ -105,15 +113,15 @@ struct ClientsDetailView: View {
         error = nil
         name = record.name
         baselineName = record.name
-        let attrs = record.attributes ?? [:]
-        baselineAttributes = attrs
+        let attrs = record.attributes ?? []
+        baselineAttributes = record.attributeDictionary
         // Build editable rows from attributes map; hide "name" if it leaked in
         rows = attrs
             .filter { $0.key != "name" }
             .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
-            .map { AttrRow(key: $0.key, value: $0.value, originalValue: $0.value) }
+            .map { AttrRow(key: $0.key, value: $0.value, keyboard: $0.keyboard, originalValue: $0.value) }
     }
-    
+
     private func addNew() {
         let k = newKey.trimmingCharacters(in: .whitespacesAndNewlines)
         let v = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -122,7 +130,7 @@ struct ClientsDetailView: View {
         if let idx = rows.firstIndex(where: { $0.key.caseInsensitiveCompare(k) == .orderedSame }) {
             rows[idx].value = v
         } else {
-            rows.append(AttrRow(key: k, value: v, originalValue: nil))
+            rows.append(AttrRow(key: k, value: v, keyboard: keyboardHint(for: k), originalValue: nil))
         }
         newKey = ""; newValue = ""
     }
@@ -161,29 +169,37 @@ struct ClientsDetailView: View {
         
         do {
             let updated = try await api.updateClient(clientKey: record.client_key, patch: patch)
-            
-            let updatedAttrs = updated.attributes ?? [:]
+
+            let updatedAttrs = updated.attributes ?? []
             let flat = ClientRecord(
                 client_key: updated.client_key,
                 name: updated.name,
                 attributes: updatedAttrs.isEmpty ? nil : updatedAttrs
             )
-            
+
             await MainActor.run {
                 // Update baselines and UI state already set above to ensure consistency
                 baselineName = updated.name
-                baselineAttributes = updated.attributes ?? [:]
+                baselineAttributes = updated.attributeDictionary
                 name = updated.name
-                let attrs = baselineAttributes
+                let attrs = updated.attributes ?? []
                 rows = attrs
                     .filter { $0.key != "name" }
                     .sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
-                    .map { AttrRow(key: $0.key, value: $0.value, originalValue: $0.value) }
+                    .map { AttrRow(key: $0.key, value: $0.value, keyboard: $0.keyboard, originalValue: $0.value) }
                 onUpdate(flat)
             }
         } catch {
             await MainActor.run { self.error = error.localizedDescription }
         }
+    }
+
+    private var newAttributeKeyboard: ClientAttributeKeyboard {
+        keyboardHint(for: newKey)
+    }
+
+    private func keyboardHint(for key: String) -> ClientAttributeKeyboard {
+        api.keyboardHint(forAttribute: key)
     }
 }
 
