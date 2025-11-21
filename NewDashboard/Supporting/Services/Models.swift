@@ -1,4 +1,8 @@
 import Foundation
+import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - API Error
 
@@ -114,28 +118,118 @@ struct NewTicket: Codable {
 
 // MARK: - Clients
 
+enum ClientAttributeKeyboard: String, Codable, CaseIterable {
+    case plain
+    case name
+    case email
+    case phone
+    case number
+    case decimal
+    case url
+    case location
+
+#if canImport(UIKit)
+    var textContentType: UITextContentType? {
+        switch self {
+        case .email: return .emailAddress
+        case .phone: return .telephoneNumber
+        case .url: return .URL
+        case .name: return .name
+        default: return nil
+        }
+    }
+#endif
+
+    var autocapitalization: TextInputAutocapitalization {
+        switch self {
+        case .name, .location: return .words
+        default: return .never
+        }
+    }
+
+    var keyboardType: UIKeyboardType {
+        switch self {
+        case .email: return .emailAddress
+        case .phone: return .phonePad
+        case .number: return .numberPad
+        case .decimal: return .decimalPad
+        case .url: return .URL
+        default: return .default
+        }
+    }
+
+    static func suggested(for key: String) -> ClientAttributeKeyboard {
+        let lower = key.lowercased()
+        if lower.contains("email") { return .email }
+        if lower.contains("phone") || lower.contains("tel") { return .phone }
+        if lower.contains("zip") || lower.contains("postal") { return .number }
+        if lower.contains("rate") || lower.contains("amount") || lower.contains("price") || lower.contains("cost") { return .decimal }
+        if lower.contains("url") || lower.contains("website") { return .url }
+        if lower.contains("address") || lower.contains("city") || lower.contains("state") { return .location }
+        if lower.contains("name") || lower.contains("contact") { return .name }
+        return .plain
+    }
+}
+
+struct ClientAttributeKey: Identifiable, Codable, Hashable {
+    let key: String
+    let keyboard: ClientAttributeKeyboard
+    var id: String { key }
+
+    init(key: String, keyboard: ClientAttributeKeyboard = .plain) {
+        self.key = key
+        self.keyboard = keyboard
+    }
+
+    init(from decoder: Decoder) throws {
+        if let sv = try? decoder.singleValueContainer(), let string = try? sv.decode(String.self) {
+            self.key = string
+            self.keyboard = .plain
+            return
+        }
+
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.key = try c.decode(String.self, forKey: .key)
+        self.keyboard = try c.decodeIfPresent(ClientAttributeKeyboard.self, forKey: .keyboard) ?? .plain
+    }
+
+    private enum CodingKeys: String, CodingKey { case key, keyboard }
+}
+
+struct ClientAttribute: Identifiable, Codable, Hashable {
+    let key: String
+    var value: String
+    var keyboard: ClientAttributeKeyboard
+    var id: String { key }
+}
+
 // Flat model for UI
 struct ClientRecord: Identifiable, Codable, Hashable {
     let client_key: String
     let name: String
-    let attributes: [String: String]?
+    let attributes: [ClientAttribute]?
     var id: String { client_key }
+
+    var attributeDictionary: [String: String] {
+        let pairs = attributes?.map { ($0.key, $0.value) } ?? []
+        return Dictionary(uniqueKeysWithValues: pairs)
+    }
 }
 
 // Envelope for GET /api/v1/clients
 struct ClientsEnvelope: Decodable {
     let clients: [String: ClientBlob]
-    let attribute_keys: [String]?
-    
+    let attribute_keys: [ClientAttributeKey]?
+
     struct ClientBlob: Decodable {
         let name: String
         let extras: [String: String]
-        
+
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: DynamicCodingKey.self)
             var nameVal = ""
             var extrasDict: [String: String] = [:]
-            
+
             for key in c.allKeys {
                 if key.stringValue == "name" {
                     nameVal = (try? c.decode(String.self, forKey: key)) ?? ""
@@ -150,7 +244,7 @@ struct ClientsEnvelope: Decodable {
             name = nameVal
             extras = extrasDict
         }
-        
+
         private struct DynamicCodingKey: CodingKey {
             var stringValue: String
             init?(stringValue: String) { self.stringValue = stringValue }

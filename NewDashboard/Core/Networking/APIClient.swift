@@ -42,6 +42,7 @@ final class APIClient: ObservableObject {
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
+    @Published private(set) var clientAttributeKeys: [ClientAttributeKey] = []
     let urlSession: URLSession
 
     init(
@@ -198,11 +199,15 @@ extension APIClient {
             throw error
         }
 
+        await MainActor.run {
+            clientAttributeKeys = env.attribute_keys ?? []
+        }
+
         let flat = env.clients.map { (key, blob) in
             ClientRecord(
                 client_key: key,
                 name: blob.name,
-                attributes: blob.extras.isEmpty ? nil : blob.extras
+                attributes: makeAttributes(from: blob.extras)
             )
         }
 
@@ -235,23 +240,49 @@ extension APIClient {
         if let env = try? decoder.decode(SingleEnvelope.self, from: data) {
             let name = env.name ?? env.client?["name"] ?? env.client_key
             let attrs = env.client?.filter { $0.key != "name" } ?? [:]
-            return ClientRecord(client_key: env.client_key, name: name, attributes: attrs.isEmpty ? nil : attrs)
+            return ClientRecord(client_key: env.client_key, name: name, attributes: makeAttributes(from: attrs))
         }
-        
+
         // Fallback: assume flat map object { "name": "...", other attrs... }
         if let flat = try? decoder.decode([String:String].self, from: data) {
             let name = flat["name"] ?? clientKey
             let attrs = flat.filter { $0.key != "name" }
-            return ClientRecord(client_key: clientKey, name: name, attributes: attrs.isEmpty ? nil : attrs)
+            return ClientRecord(client_key: clientKey, name: name, attributes: makeAttributes(from: attrs))
         }
         
         // As a last resort try the same shape as list
         if let blob = try? decoder.decode(ClientsEnvelope.ClientBlob.self, from: data) {
             let attrs = blob.extras.filter { $0.key != "name" }
-            return ClientRecord(client_key: clientKey, name: blob.name, attributes: attrs.isEmpty ? nil : attrs)
+            return ClientRecord(client_key: clientKey, name: blob.name, attributes: makeAttributes(from: attrs))
         }
         
         throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Unrecognized client PATCH response"))
+    }
+}
+
+// MARK: - Client helpers
+
+private extension APIClient {
+    func makeAttributes(from raw: [String: String]) -> [ClientAttribute]? {
+        guard !raw.isEmpty else { return nil }
+
+        let hints = Dictionary(uniqueKeysWithValues: clientAttributeKeys.map { ($0.key.lowercased(), $0.keyboard) })
+        let attributes = raw.map { key, value in
+            let hint = hints[key.lowercased()] ?? ClientAttributeKeyboard.suggested(for: key)
+            return ClientAttribute(key: key, value: value, keyboard: hint)
+        }
+
+        let sorted = attributes.sorted { $0.key.localizedCaseInsensitiveCompare($1.key) == .orderedAscending }
+        return sorted.isEmpty ? nil : sorted
+    }
+}
+
+extension APIClient {
+    func keyboardHint(forAttribute key: String) -> ClientAttributeKeyboard {
+        if let hint = clientAttributeKeys.first(where: { $0.key.caseInsensitiveCompare(key) == .orderedSame })?.keyboard {
+            return hint
+        }
+        return ClientAttributeKeyboard.suggested(for: key)
     }
 }
 
@@ -356,13 +387,13 @@ extension APIClient {
         if let flat = try? decoder.decode([String:String].self, from: data) {
             let nameOut = flat["name"] ?? name
             let attrs = flat.filter { $0.key != "name" }
-            return ClientRecord(client_key: clientKey, name: nameOut, attributes: attrs.isEmpty ? nil : attrs)
+            return ClientRecord(client_key: clientKey, name: nameOut, attributes: makeAttributes(from: attrs))
         }
         
         // Blob like ClientsEnvelope.ClientBlob
         if let blob = try? decoder.decode(ClientsEnvelope.ClientBlob.self, from: data) {
             let attrs = blob.extras.filter { $0.key != "name" }
-            return ClientRecord(client_key: clientKey, name: blob.name, attributes: attrs.isEmpty ? nil : attrs)
+            return ClientRecord(client_key: clientKey, name: blob.name, attributes: makeAttributes(from: attrs))
         }
         
         // Already flat ClientRecord?
@@ -418,7 +449,7 @@ extension APIClient {
         if let env = try? decoder.decode(SingleEnvelope.self, from: data) {
             let nameOut = env.name ?? env.client?["name"] ?? env.client_key
             let attrs = env.client?.filter { $0.key != "name" } ?? [:]
-            return ClientRecord(client_key: env.client_key, name: nameOut, attributes: attrs.isEmpty ? nil : attrs)
+            return ClientRecord(client_key: env.client_key, name: nameOut, attributes: makeAttributes(from: attrs))
         }
         
         // 4) Already a ClientRecord?

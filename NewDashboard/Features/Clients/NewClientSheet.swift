@@ -72,12 +72,14 @@ struct NewClientSheet: View {
                             }
                         }
                     }
-                    
+
                     HStack {
                         TextField("key (e.g. timezone)", text: $attrKey)
                             .textInputAutocapitalization(.never)
                         TextField("value (e.g. CST)", text: $attrValue)
-                            .textInputAutocapitalization(.never)
+                            .textInputAutocapitalization(attrKeyboard.autocapitalization)
+                            .keyboardType(attrKeyboard.keyboardType)
+                            .applyTextContentType(attrKeyboard.textContentType)
                             .multilineTextAlignment(.trailing)
                         Button { addAttr() } label: {
                             Image(systemName: "plus.circle.fill")
@@ -120,6 +122,10 @@ struct NewClientSheet: View {
         guard !k.isEmpty, !reservedKeys.contains(k) else { return }
         attrs[k] = v
         attrKey = ""; attrValue = ""
+    }
+
+    private var attrKeyboard: ClientAttributeKeyboard {
+        api.keyboardHint(forAttribute: attrKey)
     }
     
     private func create() async {
