@@ -71,6 +71,10 @@ struct ActiveView: View {
                 error = nil
                 if newClientKey.isEmpty, let first = c.first { newClientKey = first.client_key }
             }
+        } catch is CancellationError {
+            return
+        } catch let urlErr as URLError where urlErr.code == .cancelled {
+            return
         } catch {
             await MainActor.run { self.error = error.localizedDescription }
         }

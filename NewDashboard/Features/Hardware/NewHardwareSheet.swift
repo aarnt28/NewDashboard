@@ -29,7 +29,7 @@ struct NewHardwareSheet: View {
             Form {
                 Section("Description") {
                     TextField("Description", text: $descriptionText)
-                        .textInputAutocapitalization(.never)
+                        .textInputAutocapitalization(.sentences)
                 }
                 
                 Section("Identifiers") {
@@ -37,6 +37,7 @@ struct NewHardwareSheet: View {
                         TextField("Barcode", text: $barcodeText)
                             .textInputAutocapitalization(.never)
                             .keyboardType(.asciiCapable)
+                            .autocorrectionDisabled(true)
                         Button { showScanner = true } label: {
                             Image(systemName: "barcode.viewfinder")
                         }
@@ -53,7 +54,8 @@ struct NewHardwareSheet: View {
                 
                 Section("Vendors") {
                     TextField("Comma-separated (e.g. Amazon, CDW)", text: $vendorsText)
-                        .textInputAutocapitalization(.never)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled(true)
                 }
                 
                 if let error { Section { Text(error).foregroundStyle(.red) } }

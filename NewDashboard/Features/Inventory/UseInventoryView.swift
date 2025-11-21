@@ -26,6 +26,7 @@ struct UseInventoryView: View {
                     HStack {
                         TextField("Barcode", text: $barcode)
                             .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled(true)
                             .textFieldStyle(.roundedBorder)
                         Button {
                             showScanner = true
@@ -66,6 +67,7 @@ struct UseInventoryView: View {
                 Section("Notes") {
                     TextEditor(text: $notes)
                         .frame(minHeight: 80)
+                        .textInputAutocapitalization(.sentences)
                 }
                 
                 if let error {

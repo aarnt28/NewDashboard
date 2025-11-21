@@ -34,6 +34,7 @@ struct ReceiveInventoryView: View {
                     HStack {
                         TextField("Barcode", text: $barcode)
                             .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled(true)
                             .textFieldStyle(.roundedBorder)
                         Button {
                             showScanner = true
@@ -57,12 +58,14 @@ struct ReceiveInventoryView: View {
                         .keyboardType(.decimalPad)
                         .textInputAutocapitalization(.never)
                     TextField("Vendor (optional)", text: $vendor)
-                        .textInputAutocapitalization(.never)
+                        .textInputAutocapitalization(.words)
+                        .autocorrectionDisabled(true)
                 }
                 
                 
                 Section("Notes") {
                     TextEditor(text: $notes).frame(minHeight: 80)
+                        .textInputAutocapitalization(.sentences)
                 }
                 
                 if let error {

@@ -11,6 +11,13 @@ struct OpenTicketsEntry: TimelineEntry {
 
 // MARK: - Provider
 struct OpenTicketsProvider: TimelineProvider {
+    private enum Keys {
+        static let lastCount = "OpenTicketsWidget.lastCount"
+        static let lastUpdated = "OpenTicketsWidget.lastUpdated"
+        static let apiBase = "APIClient.baseURL"
+        static let apiKey = "APIClient.apiKey"
+    }
+
     func placeholder(in context: Context) -> OpenTicketsEntry {
         OpenTicketsEntry(date: Date(), openCount: 3, lastUpdated: nil)
     }
@@ -36,10 +43,10 @@ struct OpenTicketsProvider: TimelineProvider {
         let suite = UserDefaults(suiteName: SharedAppConstants.appGroupSuite) ?? .standard
 
         // Keys mirror APIClient.Defaults
-        let baseURLString = suite.string(forKey: "APIClient.baseURL") ?? "https://tracker.turnernet.co"
-        let apiKey = suite.string(forKey: "APIClient.apiKey")
+        let baseURLString = suite.string(forKey: Keys.apiBase) ?? "https://tracker.turnernet.co"
+        let apiKey = suite.string(forKey: Keys.apiKey)
 
-        guard let baseURL = URL(string: baseURLString) else {
+        guard let baseURL = URL(string: baseURLString), baseURL.scheme == "https" else {
             completion(self.cachedCount(from: suite), self.cachedDate(from: suite))
             return
         }
@@ -48,15 +55,24 @@ struct OpenTicketsProvider: TimelineProvider {
         var req = URLRequest(url: path)
         req.httpMethod = "GET"
         req.addValue("application/json", forHTTPHeaderField: "Accept")
+        req.timeoutInterval = 10
         if let apiKey, !apiKey.isEmpty {
             req.addValue(apiKey, forHTTPHeaderField: "X-API-Key")
         }
 
         URLSession.shared.dataTask(with: req) { data, response, error in
+            guard error == nil,
+                  let http = response as? HTTPURLResponse,
+                  (200..<300).contains(http.statusCode)
+            else {
+                completion(self.cachedCount(from: suite), self.cachedDate(from: suite))
+                return
+            }
+
             let count = self.countOpenTickets(data: data)
             if let count {
-                suite.set(count, forKey: "OpenTicketsWidget.lastCount")
-                suite.set(Date().timeIntervalSince1970, forKey: "OpenTicketsWidget.lastUpdated")
+                suite.set(count, forKey: Keys.lastCount)
+                suite.set(Date().timeIntervalSince1970, forKey: Keys.lastUpdated)
                 completion(count, Date())
             } else {
                 completion(self.cachedCount(from: suite), self.cachedDate(from: suite))
@@ -97,11 +113,11 @@ struct OpenTicketsProvider: TimelineProvider {
     }
 
     private func cachedCount(from suite: UserDefaults) -> Int {
-        suite.integer(forKey: "OpenTicketsWidget.lastCount")
+        suite.integer(forKey: Keys.lastCount)
     }
 
     private func cachedDate(from suite: UserDefaults) -> Date? {
-        let ts = suite.double(forKey: "OpenTicketsWidget.lastUpdated")
+        let ts = suite.double(forKey: Keys.lastUpdated)
         return ts > 0 ? Date(timeIntervalSince1970: ts) : nil
     }
 }

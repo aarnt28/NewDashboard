@@ -10,6 +10,8 @@ import SwiftUI
 struct OverviewView: View {
     @EnvironmentObject var api: APIClient
     @Environment(\.openURL) private var openURL
+    
+    var selectTab: (AppTab) -> Void = { _ in } // default no-op for previews
 
     @State private var totalTickets: Int = 0
     @State private var openTickets: Int = 0
@@ -39,29 +41,51 @@ struct OverviewView: View {
                     .padding(.top, 6)
 
                     VStack(spacing: 18) {
-                        StatCard(
-                            title: "Tickets",
-                            bigNumberLeft: openTickets,
-                            bigNumberRight: totalTickets,
-                            subtitleLeft: "Open",
-                            subtitleRight: "Completion: \(completionPercent)%"
-                        )
-
-                        StatCard(
-                            title: "Hardware Inventory",
-                            bigNumberLeft: hardwareCount,
-                            bigNumberRight: nil,
-                            subtitleLeft: "Tracked assets",
-                            subtitleRight: nil
-                        )
-
-                        StatCard(
-                            title: "Client Roster",
-                            bigNumberLeft: clientCount,
-                            bigNumberRight: nil,
-                            subtitleLeft: "Active relationships",
-                            subtitleRight: nil
-                        )
+                        // Tickets card -> go to Tickets tab
+                        Button {
+                            selectTab(.tickets)
+                        } label: {
+                            StatCard(
+                                title: "Tickets",
+                                bigNumberLeft: openTickets,
+                                bigNumberRight: totalTickets,
+                                subtitleLeft: "Open",
+                                subtitleRight: "Completion: \(completionPercent)%"
+                            )
+                            .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(.isButton)
+                        
+                        // Hardware Inventory card -> go to Hardware tab
+                        Button {
+                            selectTab(.hardware)
+                        } label: {
+                            StatCard(
+                                title: "Hardware Inventory",
+                                bigNumberLeft: hardwareCount,
+                                bigNumberRight: nil,
+                                subtitleLeft: "Tracked assets",
+                                subtitleRight: nil
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(.isButton)
+                        
+                        // Client Roster card -> go to Clients tab
+                        Button {
+                            selectTab(.clients)
+                        } label: {
+                            StatCard(
+                                title: "Client Roster",
+                                bigNumberLeft: clientCount,
+                                bigNumberRight: nil,
+                                subtitleLeft: "Active relationships",
+                                subtitleRight: nil
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(.isButton)
                     }
 
                     if let e = error {
@@ -102,16 +126,22 @@ struct OverviewView: View {
             async let ticketsTask = api.listTickets()
             async let hardwareTask = api.listHardware(limit: 1, offset: 0)     // we only need the count/total
             async let clientsTask = api.fetchClientsFlat()
-
+            
             let (tickets, hardware, clients) = try await (ticketsTask, hardwareTask, clientsTask)
-
+            
             totalTickets = tickets.count
             openTickets = tickets.filter { !$0.completed }.count
-
+            
             // HardwareResult exposes .total, but fall back to count when nil
             hardwareCount = hardware.total ?? hardware.items.count
-
+            
             clientCount = clients.count
+        } catch is CancellationError {
+            // Ignore cooperative cancellation from pull-to-refresh
+            return
+        } catch let urlErr as URLError where urlErr.code == .cancelled {
+            // Also ignore URLSession's cancelled errors
+            return
         } catch {
             self.error = error.localizedDescription
         }

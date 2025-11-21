@@ -10,6 +10,7 @@ import SwiftUI
 
 struct TicketDetailView: View {
     @EnvironmentObject var api: APIClient
+    @Environment(\.dismiss) private var dismiss
     @State var ticket: Ticket
     var onUpdate: (Ticket) -> Void
     var onDelete: () -> Void
@@ -30,6 +31,7 @@ struct TicketDetailView: View {
     @State private var error: String?
     
     @State private var showScanner = false
+    @State private var showDeleteConfirm = false
     
     var body: some View {
         ScrollView {
@@ -83,9 +85,11 @@ struct TicketDetailView: View {
                     Toggle("Completed", isOn: $completed)
                     Toggle("Sent", isOn: $sent)
                     TextField("Invoice #", text: $invoiceNumber)
+                        .keyboardType(.numberPad)
                         .textInputAutocapitalization(.never)
                         .textFieldStyle(.roundedBorder)
                     TextField("Invoiced Total", text: $invoicedTotal)
+                        .keyboardType(.decimalPad)
                         .textInputAutocapitalization(.never)
                         .textFieldStyle(.roundedBorder)
                     //TextField("Calculated Total", text: $calculated_total)
@@ -98,15 +102,18 @@ struct TicketDetailView: View {
                     GroupBox("Hardware") {
                         if let desc = ticket.hardware_description {
                             Text(desc).font(.subheadline)
+                                .textInputAutocapitalization(.words)
                         }
                         if let sales = ticket.hardware_sales_price, !sales.isEmpty {
                             Text("Unit Price: \(sales)")
                                 .font(.caption)
+                                .keyboardType(.decimalPad)
                         }
                         HStack {
                             TextField("Barcode", text: $hardwareBarcode)
                                 .textInputAutocapitalization(.never)
                                 .textFieldStyle(.roundedBorder)
+                                .autocorrectionDisabled(true)
                             Button { showScanner = true } label: {
                                 Image(systemName: "barcode.viewfinder")
                             }
@@ -127,6 +134,7 @@ struct TicketDetailView: View {
                 if ticket.entry_type == .deployment_flat_rate {
                     GroupBox("Flat Rate") {
                         TextField("Amount", text: $flatRateAmount)
+                            .keyboardType(.decimalPad)
                             .textInputAutocapitalization(.never)
                             .textFieldStyle(.roundedBorder)
                         TextField("Quantity", text: $flatRateQuantity)
@@ -142,6 +150,7 @@ struct TicketDetailView: View {
                         .scrollContentBackground(.hidden)
                         .background(Color.secondary.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .textInputAutocapitalization(.sentences)
                 }
                 
                 // MARK: ATTACHMENTS
@@ -181,7 +190,7 @@ struct TicketDetailView: View {
                     }
                     .disabled(ticket.end_iso != nil)
                     
-                    Button(role: .destructive) { onDelete() } label: {
+                    Button(role: .destructive) { showDeleteConfirm = true } label: {
                         Label("Delete Ticket", systemImage: "trash")
                     }
                 }
@@ -202,6 +211,15 @@ struct TicketDetailView: View {
             ScannerSheet { code in
                 hardwareBarcode = code
             }
+        }
+        .alert("Delete this ticket?", isPresented: $showDeleteConfirm) {
+            Button("Delete", role: .destructive) {
+                onDelete()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This action cannot be undone.")
         }
     }
     

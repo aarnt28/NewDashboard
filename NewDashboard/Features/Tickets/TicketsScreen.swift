@@ -13,6 +13,8 @@ struct TicketsScreen: View {
     @State private var tickets: [Ticket] = []
     @State private var error: String?
     @State private var loading = false
+    @State private var showDeleteBanner = false
+    @State private var deleteBannerText = ""
     
     @AppStorage("TicketsScreen.showCompleted") private var
         showCompleted: Bool = true
@@ -68,6 +70,27 @@ struct TicketsScreen: View {
                 if loading && tickets.isEmpty { ProgressView() }
                 if let e = error { Text(e).foregroundStyle(.red).padding() }
             }
+            .overlay(alignment: .top) {
+                if showDeleteBanner {
+                    HStack(spacing: 10) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.white)
+                        Text(deleteBannerText.isEmpty ? "Ticket deleted" : deleteBannerText)
+                            .foregroundStyle(.white)
+                            .font(.subheadline.weight(.semibold))
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(Color.black.opacity(0.8))
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(1)
+                }
+            }
             .task { await reload() }
             .refreshable { await reload() }
         }
@@ -96,6 +119,18 @@ struct TicketsScreen: View {
             do {
                 try await api.deleteTicket(id: t.id)
                 await MainActor.run { tickets.removeAll { $0.id == t.id } }
+                // Refresh the full list to ensure consistency
+                await reload()
+                // Show a confirmation banner
+                await MainActor.run {
+                    deleteBannerText = "Deleted ticket #\(t.id)"
+                    withAnimation(.spring()) { showDeleteBanner = true }
+                }
+                // Auto-dismiss after 2 seconds
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run {
+                    withAnimation { showDeleteBanner = false }
+                }
             } catch {
                 await MainActor.run { self.error = error.localizedDescription }
             }

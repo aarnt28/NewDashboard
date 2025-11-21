@@ -28,7 +28,7 @@ struct HardwareDetailView: View {
         Form {
             Section("Description") {
                 TextField("Description", text: $descriptionText)
-                    .textInputAutocapitalization(.never)
+                    .textInputAutocapitalization(.sentences)
             }
             
             Section("Identifiers") {
@@ -64,7 +64,7 @@ struct HardwareDetailView: View {
             
             Section("Vendors") {
                 TextField("Comma-separated (e.g. Amazon, CDW)", text: $vendorsText)
-                    .textInputAutocapitalization(.never)
+                    .textInputAutocapitalization(.words)
             }
             
             if let error {
